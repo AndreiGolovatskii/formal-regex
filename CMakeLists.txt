@@ -10,6 +10,7 @@ append_coverage_compiler_flags()
 
 
 add_subdirectory(nfa)
+add_subdirectory(solution)
 add_subdirectory(tests)
 
 setup_target_for_coverage_gcovr_html(
