@@ -84,10 +84,7 @@ class TNFAutomaton {
 
     std::vector<std::vector<TToEdge_>> EdgesFrom;
 
-    void AddEdge_(int from, int to, char edge) {
-        assert(from < static_cast<int>(EdgesFrom.size()));
-        assert(to < static_cast<int>(EdgesFrom.size()));
-
+    inline void AddEdge_(int from, int to, char edge) {
         EdgesFrom[from].emplace_back(to, edge);
     }
 
