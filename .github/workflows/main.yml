@@ -21,9 +21,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     - uses: actions/checkout@v2
-    - name: Install gtest
+    - name: Install gtest gcovr
       run: |
        sudo apt-get install libgtest-dev
+       sudo apt-get install gcovr
        cd /usr/src/gtest
        sudo cmake CMakeLists.txt
        sudo make
