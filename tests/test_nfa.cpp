@@ -6,7 +6,7 @@
 
 TEST(NFATest, Constructors) {
     TNFAutomaton nfa{};
-    ASSERT_EQ(nfa.GetFinish(),nfa.GetStart());
+    ASSERT_EQ(nfa.GetFinish(), nfa.GetStart());
 
     TNFAutomaton nfa_b{'b'};
     ASSERT_NE(nfa_b.GetStart(), nfa_b.GetFinish());
@@ -61,9 +61,9 @@ TEST(NFATest, Operations) {
 
 
 TEST(NFATest, KleeneStar) {
-    TNFAutomaton nfa('a');  // a
+    TNFAutomaton nfa('a');// a
     ASSERT_FALSE(nfa.Accept("aa"));
-    ASSERT_TRUE(nfa.KleeneStar().Accept(""));  // a*
+    ASSERT_TRUE(nfa.KleeneStar().Accept(""));// a*
     ASSERT_TRUE(nfa.KleeneStar().Accept("a"));
 }
 
@@ -73,20 +73,14 @@ TEST(NFATest, DFS) {
         std::vector<char> used;
 
     public:
-        TDFSVisitor(const TNFAutomaton& nfa): used(nfa.VertexCount(), false) {}
-        void ProcessVertex(TConstNFAVertex vertex) {
-            used[vertex] = true;
-        }
-        bool ProcessEdge(TConstNFAEdge edge) {
-            return !used[edge.GetTo()];
-        }
+        TDFSVisitor(const TNFAutomaton& nfa) : used(nfa.VertexCount(), false) {}
+        void ProcessVertex(TConstNFAVertex vertex) { used[vertex] = true; }
+        bool ProcessEdge(TConstNFAEdge edge) { return !used[edge.GetTo()]; }
 
-        void ReturnByEdge(TConstNFAEdge edge) {
-            (void)edge;
-        }
+        void ReturnByEdge(TConstNFAEdge edge) { (void) edge; }
 
         bool AllReachable() {
-            return std::all_of(used.begin(), used.end(), [](char used_i){return used_i;});
+            return std::all_of(used.begin(), used.end(), [](char used_i) { return used_i; });
         }
     };
 

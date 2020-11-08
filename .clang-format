@@ -64,3 +64,8 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 TabWidth: 4
 UseTab: Never
+Language: Cpp
+
+# Force pointers to the type for C++.
+DerivePointerAlignment: false
+PointerAlignment: Left

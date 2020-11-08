@@ -10,9 +10,9 @@ TEST(RPNTest, TestTFuntion) {
     TArithmeticalTokenPlus plus;
     ASSERT_EQ(plus(num_1(), num_2()), 28);
 
-    EXPECT_THROW(((TVAFunction<int>&)plus)(2), std::logic_error);
-    EXPECT_THROW(((TVAFunction<int>&)plus)(), std::logic_error);
-    EXPECT_THROW(((TVAFunction<int>&)num_1)(2, 3), std::logic_error);
+    EXPECT_THROW(((TVAFunction<int>&) plus)(2), std::logic_error);
+    EXPECT_THROW(((TVAFunction<int>&) plus)(), std::logic_error);
+    EXPECT_THROW(((TVAFunction<int>&) num_1)(2, 3), std::logic_error);
 }
 
 
@@ -33,7 +33,7 @@ TEST(RPNTest, TestCalculate) {
     expr.emplace_back(new TArithmeticalTokenUnaryMinus());
     ASSERT_EQ(CalculateValue<int>(expr), -21);
 
-    expr.emplace_back(new TArithmeticalTokenMinus);  // place 2-argument minus, only one argument provide
+    expr.emplace_back(new TArithmeticalTokenMinus);// place 2-argument minus, only one argument provide
 }
 
 

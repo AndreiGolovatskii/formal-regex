@@ -19,9 +19,9 @@ class TConstNFAVertex {
     friend TConstNFAEdge;
 
 protected:
-    TNFAutomaton &Nfa_;
+    TNFAutomaton& Nfa_;
     const int Id_;
-    TConstNFAVertex(const TNFAutomaton &nfa, int id) : Nfa_(const_cast<TNFAutomaton &>(nfa)), Id_(id) {}
+    TConstNFAVertex(const TNFAutomaton& nfa, int id) : Nfa_(const_cast<TNFAutomaton&>(nfa)), Id_(id) {}
 
 public:
     operator int() const { return Id_; }
@@ -32,10 +32,10 @@ class TNFAVertex : public TConstNFAVertex {
     friend TNFAEdge;
 
 protected:
-    TNFAVertex(TNFAutomaton &nfa, int id) : TConstNFAVertex(nfa, id) {}
+    TNFAVertex(TNFAutomaton& nfa, int id) : TConstNFAVertex(nfa, id) {}
 
 public:
-    void AddEdge(const TNFAVertex &other, char c);
+    void AddEdge(const TNFAVertex& other, char c);
 };
 
 
@@ -44,12 +44,12 @@ class TConstNFAEdge {
     friend TNFAVertex;
 
 protected:
-    TNFAutomaton &Nfa_;
+    TNFAutomaton& Nfa_;
     int From_;
     int To_;
     char C_;
-    TConstNFAEdge(const TNFAutomaton &nfa, int from, int to, char c)
-        : Nfa_(const_cast<TNFAutomaton &>(nfa)), From_(from), To_(to), C_(c) {}
+    TConstNFAEdge(const TNFAutomaton& nfa, int from, int to, char c)
+        : Nfa_(const_cast<TNFAutomaton&>(nfa)), From_(from), To_(to), C_(c) {}
 
 public:
     TConstNFAVertex GetFrom() const { return TConstNFAVertex(Nfa_, From_); }
@@ -63,7 +63,7 @@ class TNFAEdge : public TConstNFAEdge {
     friend TNFAVertex;
 
 protected:
-    TNFAEdge(TNFAutomaton &nfa, int from, int to, char c) : TConstNFAEdge(nfa, from, to, c) {}
+    TNFAEdge(TNFAutomaton& nfa, int from, int to, char c) : TConstNFAEdge(nfa, from, to, c) {}
 
 public:
     TNFAVertex GetFrom() { return TNFAVertex(Nfa_, From_); }
@@ -84,23 +84,21 @@ class TNFAutomaton {
 
     std::vector<std::vector<TToEdge_>> EdgesFrom;
 
-    inline void AddEdge_(int from, int to, char edge) {
-        EdgesFrom[from].emplace_back(to, edge);
-    }
+    inline void AddEdge_(int from, int to, char edge) { EdgesFrom[from].emplace_back(to, edge); }
 
-    int ExtendBy(const TNFAutomaton &other) {
+    int ExtendBy(const TNFAutomaton& other) {
         int align = EdgesFrom.size();
         EdgesFrom.insert(EdgesFrom.end(), other.EdgesFrom.begin(), other.EdgesFrom.end());
         for (size_t i = align; i < EdgesFrom.size(); ++i) {
-            for (TToEdge_ &edge : EdgesFrom[i]) { edge.To += align; }
+            for (TToEdge_& edge : EdgesFrom[i]) { edge.To += align; }
         }
         return align;
     }
 
     template<typename Visitor>
-    void VisitDFS_(Visitor &visitor, int vertex) const {
+    void VisitDFS_(Visitor& visitor, int vertex) const {
         visitor.ProcessVertex(TConstNFAVertex(*this, vertex));
-        for (const TToEdge_ &edge : EdgesFrom[vertex]) {
+        for (const TToEdge_& edge : EdgesFrom[vertex]) {
             if (visitor.ProcessEdge(TConstNFAEdge(*this, vertex, edge.To, edge.C))) {
                 VisitDFS_(visitor, edge.To);
                 visitor.ReturnByEdge(TConstNFAEdge(*this, vertex, edge.To, edge.C));
@@ -113,6 +111,7 @@ class TNFAutomaton {
         EdgesFrom.emplace_back();
         return id;
     }
+
 public:
     static const char EPS = 0;
 
@@ -135,22 +134,18 @@ public:
         return {*this, id};
     }
 
-    void SetStart(TNFAVertex vertex) {
-        Start_ = vertex;
-    }
+    void SetStart(TNFAVertex vertex) { Start_ = vertex; }
 
-    void SetFinish(TNFAVertex vertex) {
-        Finish_ = vertex;
-    }
+    void SetFinish(TNFAVertex vertex) { Finish_ = vertex; }
 
-    TNFAutomaton &operator+=(const TNFAutomaton &other) {
+    TNFAutomaton& operator+=(const TNFAutomaton& other) {
         int align = ExtendBy(other);
         AddEdge_(Start_, other.Start_ + align, EPS);
         AddEdge_(other.Finish_ + align, Finish_, EPS);
         return *this;
     }
 
-    TNFAutomaton &operator*=(const TNFAutomaton &other) {
+    TNFAutomaton& operator*=(const TNFAutomaton& other) {
         int align = ExtendBy(other);
         AddEdge_(Finish_, other.Start_ + align, EPS);
         Finish_ = other.Finish_ + align;
@@ -167,7 +162,7 @@ public:
     }
 
     class Iterator {
-        const TNFAutomaton &Nfa_;
+        const TNFAutomaton& Nfa_;
         std::unordered_set<int> Vertexes_;
 
         void EpsClosure_() {
@@ -176,7 +171,7 @@ public:
             while (!Vqueue.empty()) {
                 int vertex = Vqueue.front();
                 Vqueue.pop();
-                for (const TToEdge_ &edge : Nfa_.EdgesFrom[vertex]) {
+                for (const TToEdge_& edge : Nfa_.EdgesFrom[vertex]) {
                     if (edge.C == EPS && Vertexes_.count(edge.To) == 0) {
                         Vqueue.push(edge.To);
                         Vertexes_.insert(edge.To);
@@ -186,12 +181,12 @@ public:
         }
 
     public:
-        Iterator(const TNFAutomaton &nfa) : Nfa_(nfa), Vertexes_({nfa.Start_}) { EpsClosure_(); }
+        Iterator(const TNFAutomaton& nfa) : Nfa_(nfa), Vertexes_({nfa.Start_}) { EpsClosure_(); }
 
         void Next(char c) {
             std::unordered_set<int> newVertexes;
             for (int vertex : Vertexes_) {
-                for (const TToEdge_ &edge : Nfa_.EdgesFrom[vertex]) {
+                for (const TToEdge_& edge : Nfa_.EdgesFrom[vertex]) {
                     if (edge.C == c) { newVertexes.insert(edge.To); }
                 }
             }
@@ -202,14 +197,14 @@ public:
         bool IsTerminal() const { return Vertexes_.count(Nfa_.Finish_); }
     };
 
-    bool Accept(const std::string &s) const {
+    bool Accept(const std::string& s) const {
         Iterator iter = Iterator(*this);
-        for (const auto &c : s) { iter.Next(c); }
+        for (const auto& c : s) { iter.Next(c); }
         return iter.IsTerminal();
     }
 
     template<typename Visitor>
-    void VisitDFS(Visitor &visitor) const {
+    void VisitDFS(Visitor& visitor) const {
         VisitDFS_(visitor, Start_);
     }
 };

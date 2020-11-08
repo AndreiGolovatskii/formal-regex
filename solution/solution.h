@@ -13,7 +13,7 @@ class TTaskSolveVisitor {
 public:
     const int Mod;
     int CurrentLenMod = 0;
-    TTaskSolveVisitor(const TNFAutomaton &nfa, int mod)
+    TTaskSolveVisitor(const TNFAutomaton& nfa, int mod)
         : Visited_(nfa.VertexCount(), std::vector<char>(mod, false)), Finish_(static_cast<int>(nfa.GetFinish())),
           Mod(mod) {}
 
@@ -37,49 +37,34 @@ public:
     bool HasSolution(int len) const { return Visited_[Finish_][len]; }
 };
 
-class TNFATokenPlus: public TVAFunction<TNFAutomaton> {
+class TNFATokenPlus : public TVAFunction<TNFAutomaton> {
 public:
-    size_t GetArgCnt() const final {
-        return 2;
-    }
-    TNFAutomaton operator()(const TNFAutomaton& a, const TNFAutomaton& b) const final {
-        return a + b;
-    }
+    size_t GetArgCnt() const final { return 2; }
+    TNFAutomaton operator()(const TNFAutomaton& a, const TNFAutomaton& b) const final { return a + b; }
 };
 
 
 using TNFAToken = TVAFunction<TNFAutomaton>;
 
-class TNFATokenMul: public TNFAToken {
+class TNFATokenMul : public TNFAToken {
 public:
-    size_t GetArgCnt() const final {
-        return 2;
-    }
-    TNFAutomaton operator()(const TNFAutomaton& a, const TNFAutomaton& b) const final {
-        return a * b;
-    }
+    size_t GetArgCnt() const final { return 2; }
+    TNFAutomaton operator()(const TNFAutomaton& a, const TNFAutomaton& b) const final { return a * b; }
 };
 
-class TNFATokenKleeneStar: public TNFAToken {
+class TNFATokenKleeneStar : public TNFAToken {
 public:
-    size_t GetArgCnt() const final {
-        return 1;
-    }
-    TNFAutomaton operator()(const TNFAutomaton& a) const final {
-        return a.KleeneStar();
-    }
+    size_t GetArgCnt() const final { return 1; }
+    TNFAutomaton operator()(const TNFAutomaton& a) const final { return a.KleeneStar(); }
 };
 
-class TNFATokenNFA: public TNFAToken {
+class TNFATokenNFA : public TNFAToken {
     TNFAutomaton Value_;
+
 public:
-    explicit TNFATokenNFA(const TNFAutomaton& value): Value_(value) {}
-    size_t GetArgCnt() const final {
-        return 0;
-    }
-    TNFAutomaton operator()() const final {
-        return Value_;
-    }
+    explicit TNFATokenNFA(const TNFAutomaton& value) : Value_(value) {}
+    size_t GetArgCnt() const final { return 0; }
+    TNFAutomaton operator()() const final { return Value_; }
 };
 
 std::vector<std::unique_ptr<TNFAToken>> ParseRPNString(const std::string& s) {
