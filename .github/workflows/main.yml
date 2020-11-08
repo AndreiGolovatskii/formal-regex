@@ -20,30 +20,30 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - uses: actions/checkout@v2
-    - name: Install gtest gcovr
-      run: |
-       sudo apt-get install libgtest-dev
-       sudo apt-get install gcovr
-       cd /usr/src/gtest
-       sudo cmake CMakeLists.txt
-       sudo make
-       sudo cp *.a /usr/lib
-       sudo ln -s /usr/lib/libgtest.a /usr/local/lib/libgtest.a
-       sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/libgtest_main.a
-    - name: Build
-      run: |
-        mkdir build
-        cd build
-        cmake ..
-        make
-    - name: Test
-      uses: akhtyamovpavel/ActionGtestReport@v0.0.9
-      with:
-        exec-path: build/Tests
-        report-path: report.xml
-        working-directory: .
-          
+      - uses: actions/checkout@v2
+      - name: Install gtest gcovr
+        run: |
+          sudo apt-get install libgtest-dev
+          sudo apt-get install gcovr
+          cd /usr/src/gtest
+          sudo cmake CMakeLists.txt
+          sudo make
+          sudo cp *.a /usr/lib
+          sudo ln -s /usr/lib/libgtest.a /usr/local/lib/libgtest.a
+          sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/libgtest_main.a
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+      - name: Test
+        uses: akhtyamovpavel/ActionGtestReport@v0.0.9
+        with:
+          exec-path: build/Tests
+          report-path: report.xml
+          working-directory: .
+
     #- name: UploadArtifacts
     #  uses: actions/upload-artifact@v1.0.0
     #  with:
