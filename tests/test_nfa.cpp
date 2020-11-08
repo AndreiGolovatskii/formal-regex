@@ -10,6 +10,9 @@ TEST(NFATest, Constructors) {
 
     TNFAutomaton nfa_b{'b'};
     ASSERT_NE(nfa_b.GetStart(), nfa_b.GetFinish());
+
+    nfa_b.SetStart(nfa_b.GetFinish());
+    ASSERT_EQ(nfa_b.GetFinish(), nfa_b.GetStart());
 }
 
 
@@ -70,20 +73,32 @@ TEST(NFATest, KleeneStar) {
 
 TEST(NFATest, DFS) {
     class TDFSVisitor {
-        std::vector<char> used;
-
+        std::vector<char> Used_;
+        int LastVertex_ = -1;
     public:
-        TDFSVisitor(const TNFAutomaton& nfa) : used(nfa.VertexCount(), false) {}
-        void ProcessVertex(TConstNFAVertex vertex) { used[vertex] = true; }
-        bool ProcessEdge(TConstNFAEdge edge) { return !used[edge.GetTo()]; }
+        bool Error = false;
+        TDFSVisitor(const TNFAutomaton& nfa) : Used_(nfa.VertexCount(), false) {}
+        void ProcessVertex(TConstNFAVertex vertex) {
+            Used_[vertex] = true;
+            Error |= LastVertex_ == vertex;
+            LastVertex_ = vertex;
+        }
+        bool ProcessEdge(TConstNFAEdge edge) {
+            Error |= LastVertex_ != edge.GetFrom();
+            return !Used_[edge.GetTo()];
+        }
 
-        void ReturnByEdge(TConstNFAEdge edge) { (void) edge; }
+        void ReturnByEdge(TConstNFAEdge edge) {
+            Error |= LastVertex_ != edge.GetTo();
+            LastVertex_ = edge.GetFrom();
+        }
 
         bool AllReachable() {
-            return std::all_of(used.begin(), used.end(), [](char used_i) { return used_i; });
+            return std::all_of(Used_.begin(), Used_.end(), [](char used_i) { return used_i; });
         }
     };
 
+    ASSERT_EQ(1, 1);
     TNFAutomaton nfa('a');
     nfa += TNFAutomaton('b') * TNFAutomaton('a');
     nfa = nfa.KleeneStar();
@@ -92,4 +107,14 @@ TEST(NFATest, DFS) {
     TDFSVisitor visitor(nfa);
     nfa.VisitDFS(visitor);
     ASSERT_TRUE(visitor.AllReachable());
+    ASSERT_FALSE(visitor.Error);
+}
+
+TEST(NFATest, VertexCountChecks) {
+    ASSERT_EQ(TNFAutomaton{}.VertexCount(), 1lu);
+    ASSERT_EQ(TNFAutomaton{'a'}.VertexCount(), 2lu);
+
+    ASSERT_EQ((TNFAutomaton{'a'} + TNFAutomaton{'b'}).VertexCount(), 4lu);
+    ASSERT_EQ((TNFAutomaton{'a'} * TNFAutomaton{'b'}).VertexCount(), 4lu);
+    ASSERT_EQ(TNFAutomaton{'a'}.KleeneStar().VertexCount(), 3lu);
 }

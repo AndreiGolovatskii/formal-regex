@@ -10,33 +10,24 @@
 
 class TNFAutomaton;
 
-class TNFAEdge;
-
 class TConstNFAEdge;
 
 class TConstNFAVertex {
 public:
     inline operator int() const { return Id_; }
 
+    TConstNFAVertex(const TNFAutomaton& nfa, int id);
+
 protected:
     TNFAutomaton& Nfa_;
     const int Id_;
-    TConstNFAVertex(const TNFAutomaton& nfa, int id);
-
-    friend TNFAutomaton;
-    friend TNFAEdge;
-    friend TConstNFAEdge;
 };
 
 
 class TNFAVertex : public TConstNFAVertex {
 public:
     void AddEdge(const TNFAVertex& other, char c);
-protected:
     TNFAVertex(TNFAutomaton& nfa, int id) : TConstNFAVertex(nfa, id) {}
-
-    friend TNFAutomaton;
-    friend TNFAEdge;
 };
 
 
@@ -60,20 +51,6 @@ protected:
 };
 
 
-class TNFAEdge : public TConstNFAEdge {
-public:
-    TNFAVertex GetFrom() { return TNFAVertex(Nfa_, From_); }
-
-    TNFAVertex GetTo() { return TNFAVertex(Nfa_, To_); }
-
-protected:
-    friend TNFAutomaton;
-    friend TNFAVertex;
-
-    TNFAEdge(TNFAutomaton& nfa, int from, int to, char c);
-};
-
-
 class TNFAutomaton {
 public:
     static const char EPS = 0;
@@ -92,7 +69,7 @@ public:
 
     [[nodiscard]] inline TConstNFAVertex GetFinish() const { return TConstNFAVertex(*this, Finish_); }
 
-    [[nodiscard]] inline TNFAVertex NewVertex() {return {*this, NewVertex_()};}
+    [[nodiscard]] inline TNFAVertex NewVertex() { return {*this, NewVertex_()}; }
 
     inline void SetStart(TNFAVertex vertex) { Start_ = vertex; }
 
@@ -109,6 +86,7 @@ public:
         std::unordered_set<int> Vertexes_;
 
         void EpsClosure_();
+
     public:
         explicit Iterator(const TNFAutomaton& nfa) : Nfa_(nfa), Vertexes_({nfa.Start_}) { EpsClosure_(); }
 
@@ -140,7 +118,6 @@ private:
     std::vector<std::vector<TToEdge_>> EdgesFrom_;
 
     friend TNFAVertex;
-    friend TNFAEdge;
 
     inline void AddEdge_(int from, int to, char edge) { EdgesFrom_[from].emplace_back(to, edge); }
     int ExtendBy_(const TNFAutomaton& other);
@@ -153,7 +130,6 @@ private:
         EdgesFrom_.emplace_back();
         return id;
     }
-
 };
 
 

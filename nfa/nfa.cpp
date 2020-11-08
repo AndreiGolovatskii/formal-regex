@@ -10,9 +10,6 @@ TConstNFAEdge::TConstNFAEdge(const TNFAutomaton& nfa, int from, int to, char c)
     : Nfa_(const_cast<TNFAutomaton&>(nfa)), From_(from), To_(to), C_(c) {}
 
 
-TNFAEdge::TNFAEdge(TNFAutomaton& nfa, int from, int to, char c) : TConstNFAEdge(nfa, from, to, c) {}
-
-
 TNFAutomaton::TNFAutomaton() : Start_(0), Finish_(0), EdgesFrom_(1) {}
 
 

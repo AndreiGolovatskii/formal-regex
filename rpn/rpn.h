@@ -69,10 +69,16 @@ ValueType CalculateRPNExpression(const TokenPtrContainer& tokenPtrs) {
         if (token->GetArgCnt() == 0) {
             stack.push((*token)());
         } else if (token->GetArgCnt() == 1) {
+            if (stack.size() < 1) {
+                throw std::logic_error("Incorrect expression");
+            }
             ValueType first = stack.top();
             stack.pop();
             stack.push((*token)(first));
         } else if (token->GetArgCnt() == 2) {
+            if (stack.size() < 2) {
+                throw std::logic_error("Incorrect expression");
+            }
             ValueType second = stack.top();
             stack.pop();
             ValueType first = stack.top();
@@ -81,7 +87,7 @@ ValueType CalculateRPNExpression(const TokenPtrContainer& tokenPtrs) {
             stack.push((*token)(first, second));
         }
     }
-    if (stack.size() > 1) { throw std::logic_error("Incorrect expression, stack not empty at end"); }
+    if (stack.size() != 1) { throw std::logic_error("Incorrect expression, stack not empty at end"); }
     return stack.top();
 }
 

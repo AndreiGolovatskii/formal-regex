@@ -79,8 +79,10 @@ std::vector<std::unique_ptr<TNFAToken>> ParseRPNString(const std::string& s) {
             res.emplace_back(new TNFATokenKleeneStar{});
         } else if (c == '+') {
             res.emplace_back(new TNFATokenPlus{});
-        } else if (isalpha(c)){
+        } else if (isalpha(c)) {
             res.emplace_back(new TNFATokenNFA{TNFAutomaton{c}});
+        } else if (c == '1') {
+            res.emplace_back(new TNFATokenNFA{TNFAutomaton{}});
         } else {
             throw std::logic_error("Unexpected symbol");
         }
