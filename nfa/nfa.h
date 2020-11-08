@@ -157,12 +157,13 @@ public:
         return *this;
     }
 
-    TNFAutomaton &KleeneStar() {
-        int newFinish = NewVertex_();
-        AddEdge_(Start_, newFinish, EPS);
-        AddEdge_(Finish_, Start_, EPS);
-        Finish_ = newFinish;
-        return *this;
+    TNFAutomaton KleeneStar() const {
+        TNFAutomaton res = *this;
+        int newFinish = res.NewVertex_();
+        res.AddEdge_(Start_, newFinish, EPS);
+        res.AddEdge_(Finish_, Start_, EPS);
+        res.Finish_ = newFinish;
+        return res;
     }
 
     class Iterator {
@@ -213,19 +214,8 @@ public:
     }
 };
 
-void TNFAVertex::AddEdge(const TNFAVertex &other, char c) { Nfa_.AddEdge_(Id_, other.Id_, c); }
+TNFAutomaton operator*(const TNFAutomaton& first, const TNFAutomaton& second);
 
-
-TNFAutomaton operator*(const TNFAutomaton& first, const TNFAutomaton& second) {
-    TNFAutomaton res = first;
-    res *= second;
-    return res;
-}
-
-TNFAutomaton operator+(const TNFAutomaton& first, const TNFAutomaton& second) {
-    TNFAutomaton res = first;
-    res += second;
-    return res;
-}
+TNFAutomaton operator+(const TNFAutomaton& first, const TNFAutomaton& second);
 
 #endif//PRACTICUM_NFA_H

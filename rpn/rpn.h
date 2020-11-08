@@ -7,7 +7,7 @@
 
 
 template<class ValueType>
-class TFunction {
+class TVAFunction {
 public:
     virtual size_t GetArgCnt() const = 0;
     virtual ValueType operator()() const {
@@ -24,10 +24,10 @@ public:
         (void)second;
         throw std::logic_error("Invalid arguments number");
     }
-    virtual ~TFunction() {}
+    virtual ~TVAFunction() {}
 };
 
-class TArithmeticalTokenNum: public TFunction<int> {
+class TArithmeticalTokenNum: public TVAFunction<int> {
     int Value_;
 
 public:
@@ -40,7 +40,7 @@ public:
     }
 };
 
-class TArithmeticalTokenPlus: public TFunction<int> {
+class TArithmeticalTokenPlus: public TVAFunction<int> {
 public:
     virtual size_t GetArgCnt() const {
         return 2;
@@ -51,7 +51,7 @@ public:
     }
 };
 
-class TArithmeticalTokenMinus: public TFunction<int> {
+class TArithmeticalTokenMinus: public TVAFunction<int> {
 public:
     virtual size_t GetArgCnt() const {
         return 2;
@@ -62,7 +62,7 @@ public:
     }
 };
 
-class TArithmeticalTokenUnaryMinus: public TFunction<int> {
+class TArithmeticalTokenUnaryMinus: public TVAFunction<int> {
 public:
     virtual size_t GetArgCnt() const {
         return 1;
@@ -73,10 +73,10 @@ public:
     }
 };
 
-template<class ValueType, class TokenContainer, class StackContainer = std::stack<ValueType>>
-ValueType CalculateValue(const TokenContainer &tokens) {
+template<class ValueType, class TokenPtrContainer, class StackContainer = std::stack<ValueType>>
+ValueType CalculateValue(const TokenPtrContainer &tokenPtrs) {
     StackContainer stack;
-    for (const auto &token : tokens) {
+    for (const auto &token : tokenPtrs) {
         if (token->GetArgCnt() == 0) {
             stack.push((*token)());
         } else if (token->GetArgCnt() == 1) {
@@ -91,6 +91,9 @@ ValueType CalculateValue(const TokenContainer &tokens) {
 
             stack.push((*token)(first, second));
         }
+    }
+    if (stack.size() > 1) {
+        throw std::logic_error("Incorrect expression, stack not empty at end");
     }
     return stack.top();
 }
