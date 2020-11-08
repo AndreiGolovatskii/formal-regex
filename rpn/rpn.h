@@ -9,7 +9,7 @@
 template<class ValueType>
 class TVAFunction {
 public:
-    virtual size_t GetArgCnt() const = 0;
+    [[nodiscard]] virtual size_t GetArgCnt() const = 0;
     virtual ValueType operator()() const { throw std::logic_error("Invalid arguments number"); }
 
     virtual ValueType operator()(const ValueType& first) const {
@@ -25,38 +25,45 @@ public:
     virtual ~TVAFunction() {}
 };
 
+
 class TArithmeticalTokenNum : public TVAFunction<int> {
     int Value_;
 
 public:
-    virtual size_t GetArgCnt() const { return 0; };
     explicit TArithmeticalTokenNum(int value) : Value_(value) {}
+
+    [[nodiscard]] size_t GetArgCnt() const final { return 0; };
+
     int operator()() const final { return Value_; }
 };
 
+
 class TArithmeticalTokenPlus : public TVAFunction<int> {
 public:
-    virtual size_t GetArgCnt() const { return 2; }
+    [[nodiscard]] size_t GetArgCnt() const final { return 2; }
 
     int operator()(const int& first, const int& second) const final { return first + second; }
 };
 
+
 class TArithmeticalTokenMinus : public TVAFunction<int> {
 public:
-    virtual size_t GetArgCnt() const { return 2; }
+    [[nodiscard]] size_t GetArgCnt() const final { return 2; }
 
     int operator()(const int& first, const int& second) const final { return first - second; }
 };
 
+
 class TArithmeticalTokenUnaryMinus : public TVAFunction<int> {
 public:
-    virtual size_t GetArgCnt() const { return 1; }
+    [[nodiscard]] size_t GetArgCnt() const final { return 1; }
 
     int operator()(const int& first) const final { return -first; }
 };
 
+
 template<class ValueType, class TokenPtrContainer, class StackContainer = std::stack<ValueType>>
-ValueType CalculateValue(const TokenPtrContainer& tokenPtrs) {
+ValueType CalculateRPNExpression(const TokenPtrContainer& tokenPtrs) {
     StackContainer stack;
     for (const auto& token : tokenPtrs) {
         if (token->GetArgCnt() == 0) {
