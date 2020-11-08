@@ -55,7 +55,7 @@ public:
     TConstNFAVertex GetFrom() const { return TConstNFAVertex(Nfa_, From_); }
     TConstNFAVertex GetTo() const { return TConstNFAVertex(Nfa_, To_); }
 
-    char GetC() { return C_; }
+    char GetC() const { return C_; }
 };
 
 class TNFAEdge: public TConstNFAEdge {
