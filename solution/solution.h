@@ -2,6 +2,7 @@
 #define PRACTICUM_SOLUTION_H
 
 #include <vector>
+#include <memory>
 
 #include "nfa.h"
 #include "rpn.h"
