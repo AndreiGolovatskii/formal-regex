@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
-project(solution)
+project(rpn)
 
 include_directories(${nfa_SOURCE_DIR})
-
-add_library(solution solution.h solution.cpp)
+add_library(rpn rpn.h rpn.cpp)

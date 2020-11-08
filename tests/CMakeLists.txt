@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.4)
 project(test)
 
 include_directories(${nfa_SOURCE_DIR})
+include_directories(${rpn_SOURCE_DIR})
 
-set(TEST_SOURCES main.cpp)
+set(TEST_SOURCES test_nfa.cpp test_rnp.cpp)
 
 enable_testing()
 add_executable(Tests ${TEST_SOURCES})

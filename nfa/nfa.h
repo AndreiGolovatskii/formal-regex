@@ -58,7 +58,7 @@ public:
     char GetC() const { return C_; }
 };
 
-class TNFAEdge: public TConstNFAEdge {
+class TNFAEdge : public TConstNFAEdge {
     friend TNFAutomaton;
     friend TNFAVertex;
 
@@ -111,6 +111,11 @@ class TNFAutomaton {
         }
     }
 
+    int NewVertex_() {
+        int id = EdgesFrom.size();
+        EdgesFrom.emplace_back();
+        return id;
+    }
 public:
     static const char EPS = 0;
 
@@ -126,6 +131,21 @@ public:
 
     TConstNFAVertex GetFinish() const { return TConstNFAVertex(*this, Finish_); }
 
+    TNFAVertex NewVertex() {
+        return {*this, NewVertex_()};
+        int id = EdgesFrom.size();
+        EdgesFrom.emplace_back();
+        return {*this, id};
+    }
+
+    void SetStart(TNFAVertex vertex) {
+        Start_ = vertex;
+    }
+
+    void SetFinish(TNFAVertex vertex) {
+        Finish_ = vertex;
+    }
+
     TNFAutomaton &operator+=(const TNFAutomaton &other) {
         int align = ExtendBy(other);
         AddEdge_(Start_, other.Start_ + align, EPS);
@@ -133,7 +153,7 @@ public:
         return *this;
     }
 
-    TNFAutomaton &operator*(const TNFAutomaton &other) {
+    TNFAutomaton &operator*=(const TNFAutomaton &other) {
         int align = ExtendBy(other);
         AddEdge_(Finish_, other.Start_ + align, EPS);
         Finish_ = other.Finish_ + align;
@@ -141,7 +161,10 @@ public:
     }
 
     TNFAutomaton &KleeneStar() {
+        int newFinish = NewVertex_();
+        AddEdge_(Start_, newFinish, EPS);
         AddEdge_(Finish_, Start_, EPS);
+        Finish_ = newFinish;
         return *this;
     }
 
@@ -194,5 +217,18 @@ public:
 };
 
 void TNFAVertex::AddEdge(const TNFAVertex &other, char c) { Nfa_.AddEdge_(Id_, other.Id_, c); }
+
+
+TNFAutomaton operator*(const TNFAutomaton& first, const TNFAutomaton& second) {
+    TNFAutomaton res = first;
+    res *= second;
+    return res;
+}
+
+TNFAutomaton operator+(const TNFAutomaton& first, const TNFAutomaton& second) {
+    TNFAutomaton res = first;
+    res += second;
+    return res;
+}
 
 #endif//PRACTICUM_NFA_H

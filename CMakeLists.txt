@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.4)
 project(practicum)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" ${CMAKE_SOURCE_DIR}/cmake)
@@ -10,12 +10,19 @@ append_coverage_compiler_flags()
 
 
 add_subdirectory(nfa)
+add_subdirectory(rpn)
 add_subdirectory(solution)
 add_subdirectory(tests)
 
 setup_target_for_coverage_gcovr_html(
-  NAME gtests_cov
-  EXECUTABLE Tests
-  DEPENDENCIES Tests
-  BASE_DIRECTORY ${nfa_SOURCE_DIR}
+        NAME gtests_cov
+        EXECUTABLE Tests
+        DEPENDENCIES Tests
+)
+
+add_custom_command(
+        TARGET gtests_cov
+        COMMAND find . -name "*.gcda" -print0 | xargs -0 rm
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "cleaning .gcda..."
 )
