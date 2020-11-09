@@ -27,14 +27,6 @@ public:
     void AddEdge(TNFAVertex* other, char c);
 };
 
-namespace {
-    struct TNFAVertexHolder {
-        std::unique_ptr<TNFAVertex> Value;
-        std::unique_ptr<TNFAVertexHolder> Next;
-        TNFAVertexHolder(TNFAVertex* newVertex, std::unique_ptr<TNFAVertexHolder>&& top)
-            : Value(newVertex), Next(std::move(top)) {}
-    };
-}// namespace
 
 class TNFAEdge {
 public:
@@ -121,10 +113,17 @@ public:
     }
 
 private:
+    struct TNFAVertexHolder {
+        std::unique_ptr<TNFAVertex> Value;
+        std::unique_ptr<TNFAVertexHolder> Next;
+        TNFAVertexHolder(TNFAVertex* newVertex, std::unique_ptr<TNFAVertexHolder>&& top)
+            : Value(newVertex), Next(std::move(top)) {}
+    };
     TNFAutomaton();
 
     TNFAVertex* Start_ = nullptr;
     TNFAVertex* Finish_ = nullptr;
+
     std::unique_ptr<TNFAVertexHolder> VertexesListTop_ = nullptr;
     TNFAVertexHolder* VertexesListBottom_ = nullptr;
 
