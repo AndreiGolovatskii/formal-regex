@@ -1,12 +1,13 @@
 #include <gtest/gtest.h>
-#include <vector>
+#include <unordered_map>
 
 #include "nfa.h"
 
 
 TEST(NFATest, Constructors) {
-    TNFAutomaton nfa{};
-    ASSERT_EQ(nfa.GetFinish(), nfa.GetStart());
+    TNFAutomaton nfa{TNFAutomaton::EPS};
+    ASSERT_NE(nfa.GetFinish(), nfa.GetStart());
+    ASSERT_TRUE(nfa.Accept(""));
 
     TNFAutomaton nfa_b{'b'};
     ASSERT_NE(nfa_b.GetStart(), nfa_b.GetFinish());
@@ -17,14 +18,14 @@ TEST(NFATest, Constructors) {
 
 
 TEST(NFATest, AddEdge) {
-    TNFAutomaton nfa{};
+    TNFAutomaton nfa{TNFAutomaton::EPS};
 
     auto vertex = nfa.NewVertex();
     auto finish = nfa.NewVertex();
     nfa.SetFinish(finish);
     assert(nfa.GetFinish() == finish);
-    nfa.GetStart().AddEdge(vertex, 'c');
-    vertex.AddEdge(finish, 'd');
+    nfa.GetStart()->AddEdge(vertex, 'c');
+    vertex->AddEdge(finish, 'd');
 
     ASSERT_TRUE(nfa.Accept("cd"));
     ASSERT_FALSE(nfa.Accept("cdcd"));
@@ -51,10 +52,10 @@ TEST(NFATest, Operations) {
     ASSERT_FALSE(nfa.Accept("c"));
 
 
-    nfa = nfa.KleeneStar();
+    nfa.KleeneStarInplace();
     ASSERT_TRUE(nfa.Accept("acaabcbaba"));
 
-    nfa += TNFAutomaton('a') * TNFAutomaton('b').KleeneStar();
+    nfa += TNFAutomaton('a') * std::move(TNFAutomaton('b').KleeneStarInplace());
     ASSERT_TRUE(nfa.Accept("a"));
 
     ASSERT_TRUE(nfa.Accept("abb"));
@@ -66,55 +67,46 @@ TEST(NFATest, Operations) {
 TEST(NFATest, KleeneStar) {
     TNFAutomaton nfa('a');// a
     ASSERT_FALSE(nfa.Accept("aa"));
-    ASSERT_TRUE(nfa.KleeneStar().Accept(""));// a*
-    ASSERT_TRUE(nfa.KleeneStar().Accept("a"));
+    nfa.KleeneStarInplace();
+    ASSERT_TRUE(nfa.Accept(""));// a*
+    ASSERT_TRUE(nfa.Accept("a"));
 }
 
 
 TEST(NFATest, DFS) {
     class TDFSVisitor {
-        std::vector<char> Used_;
-        int LastVertex_ = -1;
+        std::unordered_map<const TNFAVertex*, char> Used_;
+        const TNFAVertex* LastVertex_ = nullptr;
     public:
         bool Error = false;
-        TDFSVisitor(const TNFAutomaton& nfa) : Used_(nfa.VertexCount(), false) {}
-        void ProcessVertex(TConstNFAVertex vertex) {
+        void ProcessVertex(const TNFAVertex* vertex) {
             Used_[vertex] = true;
             Error |= LastVertex_ == vertex;
             LastVertex_ = vertex;
         }
-        bool ProcessEdge(TConstNFAEdge edge) {
+        bool ProcessEdge(TNFAEdge edge) {
             Error |= LastVertex_ != edge.GetFrom();
             return !Used_[edge.GetTo()];
         }
 
-        void ReturnByEdge(TConstNFAEdge edge) {
+        void ReturnByEdge(TNFAEdge edge) {
             Error |= LastVertex_ != edge.GetTo();
             LastVertex_ = edge.GetFrom();
         }
 
         bool AllReachable() {
-            return std::all_of(Used_.begin(), Used_.end(), [](char used_i) { return used_i; });
+            return std::all_of(Used_.begin(), Used_.end(), [](const auto& iterator) { return iterator.second; });
         }
     };
 
     ASSERT_EQ(1, 1);
     TNFAutomaton nfa('a');
     nfa += TNFAutomaton('b') * TNFAutomaton('a');
-    nfa = nfa.KleeneStar();
-    nfa *= TNFAutomaton('a') * TNFAutomaton('g').KleeneStar();
+    nfa.KleeneStarInplace();
+    nfa *= TNFAutomaton('a') * std::move(TNFAutomaton('g').KleeneStarInplace());
 
-    TDFSVisitor visitor(nfa);
+    TDFSVisitor visitor;
     nfa.VisitDFS(visitor);
     ASSERT_TRUE(visitor.AllReachable());
     ASSERT_FALSE(visitor.Error);
-}
-
-TEST(NFATest, VertexCountChecks) {
-    ASSERT_EQ(TNFAutomaton{}.VertexCount(), 1lu);
-    ASSERT_EQ(TNFAutomaton{'a'}.VertexCount(), 2lu);
-
-    ASSERT_EQ((TNFAutomaton{'a'} + TNFAutomaton{'b'}).VertexCount(), 4lu);
-    ASSERT_EQ((TNFAutomaton{'a'} * TNFAutomaton{'b'}).VertexCount(), 4lu);
-    ASSERT_EQ(TNFAutomaton{'a'}.KleeneStar().VertexCount(), 3lu);
 }

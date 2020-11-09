@@ -10,32 +10,35 @@
 
 class TNFAutomaton;
 
-class TConstNFAEdge;
-
-class TConstNFAVertex {
-public:
-    inline operator int() const { return Id_; }
-
-    TConstNFAVertex(const TNFAutomaton& nfa, int id);
+class TNFAVertex {
+    friend TNFAutomaton;
+    TNFAVertex() = default;
 
 protected:
-    TNFAutomaton& Nfa_;
-    const int Id_;
+    struct Edge_ {
+        TNFAVertex* To;
+        char C;
+        Edge_(TNFAVertex* to, char c) : To(to), C(c){};
+    };
+    std::vector<Edge_> AdjEdges_{};
+
+public:
+    void AddEdge(TNFAVertex* other, char c);
 };
 
+namespace {
+    struct TNFAVertexHolder {
+        std::unique_ptr<TNFAVertex> Value;
+        std::unique_ptr<TNFAVertexHolder> Next;
+        TNFAVertexHolder(TNFAVertex* newVertex, std::unique_ptr<TNFAVertexHolder>&& top)
+            : Value(newVertex), Next(std::move(top)) {}
+    };
+}// namespace
 
-class TNFAVertex : public TConstNFAVertex {
+class TNFAEdge {
 public:
-    void AddEdge(const TNFAVertex& other, char c);
-    TNFAVertex(TNFAutomaton& nfa, int id) : TConstNFAVertex(nfa, id) {}
-};
-
-
-class TConstNFAEdge {
-public:
-    [[nodiscard]] inline TConstNFAVertex GetFrom() const { return TConstNFAVertex(Nfa_, From_); }
-
-    [[nodiscard]] inline TConstNFAVertex GetTo() const { return TConstNFAVertex(Nfa_, To_); }
+    [[nodiscard]] inline const TNFAVertex* GetFrom() const { return From_; }
+    [[nodiscard]] inline const TNFAVertex* GetTo() const { return To_; }
 
     [[nodiscard]] inline char GetC() const { return C_; }
 
@@ -43,47 +46,51 @@ protected:
     friend TNFAutomaton;
     friend TNFAVertex;
 
-    TNFAutomaton& Nfa_;
-    int From_;
-    int To_;
+    const TNFAVertex* From_;
+    const TNFAVertex* To_;
     char C_;
-    TConstNFAEdge(const TNFAutomaton& nfa, int from, int to, char c);
+    TNFAEdge(const TNFAVertex* from, const TNFAVertex* to, char c) : From_(from), To_(to), C_(c) {}
 };
-
 
 class TNFAutomaton {
 public:
     static const char EPS = 0;
+    TNFAutomaton(const TNFAutomaton& other) = delete;
+    TNFAutomaton& operator=(const TNFAutomaton& other) = delete;
 
-    TNFAutomaton();
+    TNFAutomaton(TNFAutomaton&& other) = default;
 
     explicit TNFAutomaton(char c);
 
-    [[nodiscard]] inline size_t VertexCount() const { return EdgesFrom_.size(); }
+    [[nodiscard]] inline TNFAVertex* GetStart() { return Start_; }
 
-    [[nodiscard]] inline TNFAVertex GetStart() { return TNFAVertex(*this, Start_); }
+    [[nodiscard]] inline const TNFAVertex* GetStart() const { return Start_; }
 
-    [[nodiscard]] inline TConstNFAVertex GetStart() const { return TConstNFAVertex(*this, Start_); }
+    [[nodiscard]] inline TNFAVertex* GetFinish() { return Finish_; }
 
-    [[nodiscard]] inline TNFAVertex GetFinish() { return TNFAVertex(*this, Finish_); }
+    [[nodiscard]] inline const TNFAVertex* GetFinish() const { return Finish_; }
 
-    [[nodiscard]] inline TConstNFAVertex GetFinish() const { return TConstNFAVertex(*this, Finish_); }
+    [[nodiscard]] inline TNFAVertex* NewVertex() {
+        auto* newVertex = new TNFAVertex();
+        std::unique_ptr<TNFAVertexHolder> newTop(new TNFAVertexHolder(newVertex, std::move(VertexesListTop_)));
+        VertexesListTop_ = std::move(newTop);
+        if (VertexesListBottom_ == nullptr) { VertexesListBottom_ = VertexesListTop_.get(); }
+        return newVertex;
+    }
 
-    [[nodiscard]] inline TNFAVertex NewVertex() { return {*this, NewVertex_()}; }
+    inline void SetStart(TNFAVertex* vertex) { Start_ = vertex; }
 
-    inline void SetStart(TNFAVertex vertex) { Start_ = vertex; }
+    inline void SetFinish(TNFAVertex* vertex) { Finish_ = vertex; }
 
-    inline void SetFinish(TNFAVertex vertex) { Finish_ = vertex; }
+    TNFAutomaton& operator+=(TNFAutomaton&& other);
 
-    TNFAutomaton& operator+=(const TNFAutomaton& other);
+    TNFAutomaton& operator*=(TNFAutomaton&& other);
 
-    TNFAutomaton& operator*=(const TNFAutomaton& other);
-
-    [[nodiscard]] TNFAutomaton KleeneStar() const;
+    TNFAutomaton& KleeneStarInplace();
 
     class Iterator {
         const TNFAutomaton& Nfa_;
-        std::unordered_set<int> Vertexes_;
+        std::unordered_set<const TNFAVertex*> Vertexes_;
 
         void EpsClosure_();
 
@@ -106,48 +113,43 @@ public:
         VisitDFS_(visitor, Start_);
     }
 
-private:
-    struct TToEdge_ {
-        int To;
-        char C;
-        TToEdge_(int to, char c) : To(to), C(c) {}
-    };
+    inline void Clear() {
+        VertexesListTop_ = nullptr;
+        VertexesListBottom_ = nullptr;
+        Start_ = Finish_ = nullptr;
+    }
 
-    int Start_;
-    int Finish_;
-    std::vector<std::vector<TToEdge_>> EdgesFrom_;
+private:
+    TNFAutomaton();
+
+    TNFAVertex* Start_ = nullptr;
+    TNFAVertex* Finish_ = nullptr;
+    std::unique_ptr<TNFAVertexHolder> VertexesListTop_ = nullptr;
+    TNFAVertexHolder* VertexesListBottom_ = nullptr;
 
     friend TNFAVertex;
 
-    inline void AddEdge_(int from, int to, char edge) { EdgesFrom_[from].emplace_back(to, edge); }
-    int ExtendBy_(const TNFAutomaton& other);
-
     template<typename Visitor>
-    void VisitDFS_(Visitor& visitor, int vertex) const;
-
-    [[nodiscard]] inline int NewVertex_() {
-        int id = EdgesFrom_.size();
-        EdgesFrom_.emplace_back();
-        return id;
-    }
+    void VisitDFS_(Visitor& visitor, const TNFAVertex* vertex) const;
 };
 
 
-TNFAutomaton operator*(const TNFAutomaton& first, const TNFAutomaton& second);
-
-
-TNFAutomaton operator+(const TNFAutomaton& first, const TNFAutomaton& second);
-
-
 template<typename Visitor>
-void TNFAutomaton::VisitDFS_(Visitor& visitor, int vertex) const {
-    visitor.ProcessVertex(TConstNFAVertex(*this, vertex));
-    for (const TToEdge_& edge : EdgesFrom_[vertex]) {
-        if (visitor.ProcessEdge(TConstNFAEdge(*this, vertex, edge.To, edge.C))) {
+void TNFAutomaton::VisitDFS_(Visitor& visitor, const TNFAVertex* vertex) const {
+    visitor.ProcessVertex(vertex);
+    for (const auto& edge : vertex->AdjEdges_) {
+        if (visitor.ProcessEdge(TNFAEdge(vertex, edge.To, edge.C))) {
             VisitDFS_(visitor, edge.To);
-            visitor.ReturnByEdge(TConstNFAEdge(*this, vertex, edge.To, edge.C));
+            visitor.ReturnByEdge(TNFAEdge(vertex, edge.To, edge.C));
         }
     }
 }
+
+
+TNFAutomaton operator+(TNFAutomaton&& first, TNFAutomaton&& second);
+
+
+TNFAutomaton operator*(TNFAutomaton&& first, TNFAutomaton&& second);
+
 
 #endif//PRACTICUM_NFA_H
