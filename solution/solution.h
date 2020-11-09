@@ -1,42 +1,47 @@
 #ifndef PRACTICUM_SOLUTION_H
 #define PRACTICUM_SOLUTION_H
 
-#include <vector>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include "nfa.h"
 #include "rpn.h"
 
 
 class TTaskSolveVisitor {
-    std::vector<std::vector<char>> Visited_;
-    const int Finish_;
+    std::unordered_map<const TNFAVertex*, std::vector<char>> Visited_;
+    const TNFAVertex* Finish_;
 
 public:
-    const int Mod;
-    int CurrentLenMod = 0;
-    TTaskSolveVisitor(const TNFAutomaton& nfa, int mod)
-        : Visited_(nfa.VertexCount(), std::vector<char>(mod, false)), Finish_(nfa.GetFinish()),
-          Mod(mod) {}
+    const size_t Mod;
+    size_t CurrentLenMod = 0;
+    TTaskSolveVisitor(const TNFAutomaton& nfa, size_t mod) : Finish_(nfa.GetFinish()), Mod(mod) {}
 
-    void ProcessVertex(TConstNFAVertex vertex) { Visited_[vertex][CurrentLenMod] = true; }
-    bool ProcessEdge(TConstNFAEdge edge) {
-        int nextLenMod;
+    inline void ProcessVertex(const TNFAVertex* vertex) {
+        if (Visited_[vertex].empty()) { Visited_[vertex].resize(Mod, false); }
+        Visited_[vertex][CurrentLenMod] = true;
+    }
+    bool ProcessEdge(TNFAEdge edge) {
+        size_t nextLenMod;
         if (edge.GetC() == TNFAutomaton::EPS) {
             nextLenMod = CurrentLenMod;
         } else {
             nextLenMod = (CurrentLenMod + 1) % Mod;
         }
-        if (!Visited_[edge.GetTo()][nextLenMod]) {
+        if (Visited_[edge.GetTo()].size() != Mod || !Visited_[edge.GetTo()][nextLenMod]) {
             CurrentLenMod = nextLenMod;
             return true;
         }
         return false;
     }
-    void ReturnByEdge(TConstNFAEdge edge) {
+    inline void ReturnByEdge(TNFAEdge edge) {
         if (edge.GetC() != TNFAutomaton::EPS) { CurrentLenMod = (CurrentLenMod - 1 + Mod) % Mod; }
     }
-    [[nodiscard]] bool HasSolution(int len) const { return Visited_[Finish_][len]; }
+    [[nodiscard]] bool HasSolution(size_t len) const {
+        return Visited_.find(Finish_) != Visited_.end() && Visited_.at(Finish_).size() == Mod &&
+               Visited_.at(Finish_)[len];
+    }
 };
 
 
@@ -45,29 +50,28 @@ using TNFAToken = TVAFunction<TNFAutomaton>;
 class TNFATokenPlus : public TNFAToken {
 public:
     [[nodiscard]] size_t GetArgCnt() const final { return 2; }
-    TNFAutomaton operator()(const TNFAutomaton& a, const TNFAutomaton& b) const final { return a + b; }
+    TNFAutomaton operator()(TNFAutomaton&& a, TNFAutomaton&& b) final { return std::move(a) + std::move(b); }
 };
 
 class TNFATokenMul : public TNFAToken {
 public:
     [[nodiscard]] size_t GetArgCnt() const final { return 2; }
-    TNFAutomaton operator()(const TNFAutomaton& a, const TNFAutomaton& b) const final { return a * b; }
+    TNFAutomaton operator()(TNFAutomaton&& a, TNFAutomaton&& b) final { return std::move(a) * std::move(b); }
 };
 
 class TNFATokenKleeneStar : public TNFAToken {
 public:
     [[nodiscard]] size_t GetArgCnt() const final { return 1; }
-    TNFAutomaton operator()(const TNFAutomaton& a) const final { return a.KleeneStar(); }
+    TNFAutomaton operator()(TNFAutomaton&& a) final { return std::move(a.KleeneStarInplace()); }
 };
 
 class TNFATokenNFA : public TNFAToken {
     TNFAutomaton Value_;
 
 public:
-    explicit TNFATokenNFA(const TNFAutomaton& value) : Value_(value) {}
     explicit TNFATokenNFA(TNFAutomaton&& value) : Value_(std::move(value)) {}
     [[nodiscard]] size_t GetArgCnt() const final { return 0; }
-    TNFAutomaton operator()() const final { return Value_; }
+    TNFAutomaton operator()() final { return std::move(Value_); }
 };
 
 std::vector<std::unique_ptr<TNFAToken>> ParseRPNString(const std::string& s) {
@@ -79,8 +83,12 @@ std::vector<std::unique_ptr<TNFAToken>> ParseRPNString(const std::string& s) {
             res.emplace_back(new TNFATokenKleeneStar{});
         } else if (c == '+') {
             res.emplace_back(new TNFATokenPlus{});
-        } else if (isalpha(c)){
+        } else if (isalpha(c)) {
             res.emplace_back(new TNFATokenNFA{TNFAutomaton{c}});
+        } else if (c == '1') {
+            res.emplace_back(new TNFATokenNFA{TNFAutomaton{TNFAutomaton::EPS}});
+        } else if (c == ' ') {
+            continue;
         } else {
             throw std::logic_error("Unexpected symbol");
         }

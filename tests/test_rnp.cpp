@@ -39,6 +39,10 @@ TEST(RPNTest, TestCalculate) {
 
 TEST(RPNTest, TestIncorrectExpr) {
     std::vector<std::unique_ptr<TVAFunction<int>>> expr;
+    expr.emplace_back(new TArithmeticalTokenUnaryMinus());
+    EXPECT_THROW(CalculateRPNExpression<int>(expr), std::logic_error);
+    expr.clear();
+
     expr.emplace_back(new TArithmeticalTokenNum(12));
     expr.emplace_back(new TArithmeticalTokenNum(13));
     expr.emplace_back(new TArithmeticalTokenNum(14));
