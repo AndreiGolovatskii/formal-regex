@@ -1,14 +1,12 @@
 #include "nfa.h"
 
 
-void TNFAVertex::AddEdge(TNFAVertex* other, char c) {
-    AdjEdges_.emplace_back(other, c);
-}
+void TNFAVertex::AddEdge(TNFAVertex* other, char c) { AdjEdges_.emplace_back(other, c); }
 
 TNFAutomaton::TNFAutomaton() {}
 
 
-TNFAutomaton::TNFAutomaton(char c): TNFAutomaton() {
+TNFAutomaton::TNFAutomaton(char c) : TNFAutomaton() {
     auto newStartPtr = NewVertex();
     auto newFinishPtr = NewVertex();
 

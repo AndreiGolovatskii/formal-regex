@@ -23,11 +23,11 @@ TEST(TESTSolution, WithEPS) {
 
 
 TEST(TESTSolution, Simple) {
-    ASSERT_FALSE(Solve("ab.*", 2, 1));  // (ab)*
-    ASSERT_FALSE(Solve("1abc+..*", 2, 1));  // (1.a.(b+c))*
-    ASSERT_TRUE(Solve("1abc+..*", 2, 0));  // (1.a.(b+c))*
+    ASSERT_FALSE(Solve("ab.*", 2, 1));    // (ab)*
+    ASSERT_FALSE(Solve("1abc+..*", 2, 1));// (1.a.(b+c))*
+    ASSERT_TRUE(Solve("1abc+..*", 2, 0)); // (1.a.(b+c))*
 
-    ASSERT_FALSE(Solve("abc..*d+", 3, 2)); // (abc)*+d
+    ASSERT_FALSE(Solve("abc..*d+", 3, 2));// (abc)*+d
     ASSERT_TRUE(Solve("abc..*d+", 3, 1)); // (abc)*+d
 }
 

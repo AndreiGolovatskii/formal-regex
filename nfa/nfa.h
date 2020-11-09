@@ -1,6 +1,7 @@
 #ifndef PRACTICUM_NFA_H
 #define PRACTICUM_NFA_H
 
+#include <memory>
 #include <queue>
 #include <string>
 #include <unordered_map>

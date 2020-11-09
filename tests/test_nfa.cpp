@@ -77,6 +77,7 @@ TEST(NFATest, DFS) {
     class TDFSVisitor {
         std::unordered_map<const TNFAVertex*, char> Used_;
         const TNFAVertex* LastVertex_ = nullptr;
+
     public:
         bool Error = false;
         void ProcessVertex(const TNFAVertex* vertex) {
