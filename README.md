@@ -1,4 +1,5 @@
-# formal-practicum-1
+# formal-regex
+
 [Условие задачи и ее решение](solution.pdf)
 
 Запуск CodeCov, с использованием gcovr:
